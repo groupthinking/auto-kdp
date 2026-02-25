@@ -5,7 +5,7 @@ import { program } from 'commander';
 import { BookFile } from './book/book-file.js';
 import { ExecuteBookActions } from './util/book-action-executor.js';
 import { ActionParams } from './util/action-params.js';
-import { debug } from './util/utils.js';
+import { debug, goToSleep } from './util/utils.js';
 
 // Action
 import { scrapeAmazonCoverImageUrl } from './action/scrape-amazon-cover-image-url.js';
@@ -26,35 +26,32 @@ import { BookList } from './book/book-list.js';
 import { Book } from './book/book.js';
 import { BrowserInterface, PuppeteerBrowser } from './browser.js';
 
-import pkg from 'sleep';
-const { sleep } = pkg;
-
-
 async function executeBookActionCallback(action: string, book: Book, params: ActionParams) {
   debug(book, params.verbose, '----- ' + action + '-----');
 
   switch (action) {
-    case 'archive': return await archive(book, params); break;
-    case 'book-metadata': return await updateBookMetadata(book, params); break;
-    case 'content': return await updateContent(book, params); break;
-    case 'force-publish': return await publish(book, params, true /*force*/); break;
-    case 'pricing': return await updatePricing(book, params); break;
-    case 'produce-manuscript': return await produceManuscript(book, params); break;
-    case 'publish': return await publish(book, params); break;
-    case 'remove-series-title': return await setSeriesTitle(book, params, true); break;
+    case 'archive': return await archive(book, params);
+    case 'book-metadata': return await updateBookMetadata(book, params);
+    case 'content': return await updateContent(book, params);
+    case 'force-publish': return await publish(book, params, true /*force*/);
+    case 'pricing': return await updatePricing(book, params);
+    case 'produce-manuscript': return await produceManuscript(book, params);
+    case 'publish': return await publish(book, params);
+    case 'remove-series-title': return await setSeriesTitle(book, params, true);
     case 'scrape': return await scrape(book, params);
-    case 'scrape-amazon-image': return await scrapeAmazonCoverImageUrl(book, params); break;
-    case 'assign-isbn': return await assignIsbn(book, params); break;
-    case 'scrape-isbn': return await scrapeIsbn(book, params); break;
-    case 'set-series-title': return await setSeriesTitle(book, params); break;
-    case 'unpublish': return await unpublish(book, params); break;
+    case 'scrape-amazon-image': return await scrapeAmazonCoverImageUrl(book, params);
+    case 'assign-isbn': return await assignIsbn(book, params);
+    case 'scrape-isbn': return await scrapeIsbn(book, params);
+    case 'set-series-title': return await setSeriesTitle(book, params);
+    case 'unpublish': return await unpublish(book, params);
+    default:
+        throw new Error('Unknown action: ' + action);
   }
-  throw new Error('Unknown action: ' + action);
 }
 
 async function _startPuppeteerBrowser(
   bookList: BookList,
-  headlessOverride: boolean,
+  headlessOverride: boolean | null,
   userDataDir: string,
   verbose: boolean)
   : Promise<BrowserInterface> {
@@ -109,7 +106,7 @@ async function processAllBooksOnce(scrapeOnly: boolean | null, bookList: BookLis
         if (numConsecutiveFastOperations > 200) {
           // Take a little break.
           console.log("Too many fast operations - sleeping for 30s");
-          sleep(30);
+          await goToSleep(30 * 1000);
           numConsecutiveFastOperations = 0;
         }
       } else {
@@ -125,7 +122,7 @@ async function mainWithOptions(
   contentDir: string,
   userDataDir: string,
   keepOpen: boolean,
-  headlessOverride: boolean,
+  headlessOverride: boolean | null,
   dryRun: boolean,
   verbose: boolean) {
 
@@ -189,8 +186,8 @@ async function main() {
     .requiredOption('-d, --content-dir <file>', 'Books content directory', '.')
     .requiredOption('-u, --user-data <dir>', 'User data dir to store cookies, etc', './user_data')
     .option('-k, --keep-open', 'Keep tabs open', false)
-    .option('-h, --headless <yes|no>', 'Open in headless mode (no browser visible)', '')
-    .option('-d, --dry-run', 'Dry run - no actual actions taken', false)
+    .option('--headless <yes|no>', 'Open in headless mode (no browser visible)', '')
+    .option('--dry-run', 'Dry run - no actual actions taken', false)
     .option('-v, --verbose', 'Be chatty', false);
 
   program.parse();
@@ -216,4 +213,3 @@ async function main() {
 }
 
 (async () => { main() })();
-

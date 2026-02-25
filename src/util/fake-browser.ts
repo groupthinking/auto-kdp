@@ -26,7 +26,7 @@ export class OnePageFakeBrowser implements BrowserInterface {
         if (this.closed) {
             throw new Error("Closing a closed browser");
         }
-        this.closed = false;
+        this.closed = true;
     }
 }
 
@@ -49,7 +49,6 @@ export class FakePage implements PageInterface {
     }
 
     async getRawContent(url: string, timeoutMillis: number): Promise<string> {
-        // TODO
         return "blah";
     }
 
@@ -71,7 +70,7 @@ export class FakePage implements PageInterface {
     }
 
     async type(id: string, text: string, timeoutMillis: number) {
-        this.performedActions.push("type:" + test);
+        this.performedActions.push("type:" + text);
     }
 
     async bringToFront() {

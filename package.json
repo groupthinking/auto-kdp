@@ -8,7 +8,9 @@
   "license": "ISC",
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent",
-    "clean": "rm -fr coverage dist"
+    "clean": "rm -fr coverage dist build",
+    "build": "tsc",
+    "start": "node build/index.js"
   },
   "dependencies": {
     "commander": "^10.0.1",
@@ -22,8 +24,7 @@
     "properties-reader": "^2.2.0",
     "puppeteer": "^24.11.2",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "sleep": "^6.3.0"
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.21.5",

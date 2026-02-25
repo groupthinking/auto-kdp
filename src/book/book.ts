@@ -251,7 +251,6 @@ export class Book {
       case "uk": return this.priceGbp;
       case "de":
       case "fr":
-      case "fr":
       case "es":
       case "it":
       case "nl":
@@ -418,4 +417,3 @@ export class Book {
     return result;
   }
 }
-

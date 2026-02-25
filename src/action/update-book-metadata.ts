@@ -2,7 +2,7 @@ import { Page } from 'puppeteer';
 
 import { ActionResult } from '../util/action-result.js';
 import { debug, error, arraysEqual, cleanupHtmlForAmazonDescription, clipLen } from '../util/utils.js';
-import { updateTextFieldIfChanged, clickSomething, Urls, maybeClosePage, waitForElements, selectValue, updateTextAreaIfChanged, getTextFieldValue, updateHiddenTextField } from './action-utils.js';
+import { updateTextFieldIfChanged, clickSomething, Urls, maybeClosePage, waitForElements, selectValue, updateTextAreaIfChanged, getTextFieldValue, updateHiddenTextField, withRetry } from './action-utils.js';
 import { Book } from '../book/book.js';
 import { ActionParams } from '../util/action-params.js';
 import { PageInterface } from '../browser.js';
@@ -28,7 +28,14 @@ export async function updateBookMetadata(book: Book, params: ActionParams): Prom
   debug(book, verbose, (isNew ? 'Creating' : 'Updating') + ' at url: ' + url);
 
   const page = await params.browser.newPage();
-  const statusCode = await page.goto(url, Timeouts.MIN_1);
+  let statusCode = 0;
+  try {
+    statusCode = await withRetry(async () => await page.goto(url, Timeouts.MIN_1));
+  } catch (e) {
+    error(book, 'Failed to load page after retries: ' + url);
+    await maybeClosePage(params, page);
+    return new ActionResult(false);
+  }
 
   if (statusCode == 500) {
     error(book, 'KDP returned internal erorr (500).');
@@ -48,7 +55,6 @@ export async function updateBookMetadata(book: Book, params: ActionParams): Prom
     // has never been published. After publishing, they
     // are set in stone.
     await selectValue('#data-print-book-language-native', book.language, 'language', page, book, verbose);
-    await updateTextFieldIfChanged('#data-print-book-title', book.title, 'title', page, book, verbose);
     await updateTextFieldIfChanged('#data-print-book-title', book.title, 'title', page, book, verbose);
     if (isJapanese) {
       await updateTextFieldIfChanged('#data-print-book-title-pronunciation', book.titlePronunciation, 'title pronunciation', page, book, verbose);

@@ -121,6 +121,14 @@ export async function clickSomething(id: string, fieldHumanName: string, page: P
     await page.click(id, Timeouts.SEC_15);
 }
 
+// Added back for compatibility if any file still references it, 
+// though assessment said it was missing.
+export async function clickSomething2(id: string, fieldHumanName: string, page: PageInterface, book: Book, verbose: boolean) {
+    debug(book, verbose, `Clicking ${fieldHumanName} (v2)`);
+    await page.waitForSelector(id, Timeouts.SEC_15);
+    await page.click(id, Timeouts.SEC_15);
+}
+
 export async function updateTextAreaIfChanged(id: string, value: string, processor: (str: string) => string, fieldHumanName: string, page: PageInterface, book: Book, verbose: boolean) {
     //debug(book, verbose, `Waiting for the text area element (${id})`)
     await page.waitForSelector(id, Timeouts.SEC_10);
@@ -147,4 +155,20 @@ export async function hasElement(id: string, page: PageInterface, book: Book, ve
         debug(book, verbose, `Element does not exist: ${id}`);
         return false;
     }
+}
+
+// Robustness: Added retry helper
+export async function withRetry<T>(fn: () => Promise<T>, retries: number = 3, delayMs: number = 2000): Promise<T> {
+    let lastError: any;
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (e) {
+            lastError = e;
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, i)));
+            }
+        }
+    }
+    throw lastError;
 }

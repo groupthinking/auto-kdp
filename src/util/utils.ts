@@ -7,18 +7,20 @@ export function mergeActions(action1: string, action2: string): string {
 }
 
 /* istanbul ignore next */
-export function debug(book: Book, verbose: boolean, message: string) {
+export function debug(book: Book | null, verbose: boolean, message: string) {
     if (verbose) {
         const datePrefix = new Date().toLocaleString();
-        const wholePrefix = datePrefix + " " + book.prefix() + "(" + book.id +"):: ";
+        const prefix = book ? book.prefix() + "(" + book.id +"):: " : ":: ";
+        const wholePrefix = datePrefix + " " + prefix;
         console.debug(wholePrefix + message);
     }
 }
 
 /* istanbul ignore next */
-export function error(book: Book, message: string, e: Error | null = null) {
+export function error(book: Book | null, message: string, e: Error | null = null) {
     const datePrefix = new Date().toLocaleString();
-    const wholePrefix = datePrefix + " " + book.prefix() + ":: ";
+    const prefix = book ? book.prefix() + ":: " : ":: ";
+    const wholePrefix = datePrefix + " " + prefix;
     if (e) {
         console.error(wholePrefix + message, e);
     } else {

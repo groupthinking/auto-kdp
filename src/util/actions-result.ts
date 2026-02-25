@@ -19,9 +19,9 @@ export class ActionsResult {
             this.isDone = true;
         }
 
-        if (actionResult.nextActions != '') {
-            this.isDone = true;
-        }
+        // Bug fix: nextActions being non-empty doesn't mean we are done with the book,
+        // it just means the current action returned some follow-up actions.
+        // We only set isDone=true on failure.
     }
 
     hasSuccess() {

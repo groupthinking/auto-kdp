@@ -1,6 +1,6 @@
 import { ActionResult } from '../util/action-result.js';
 import { debug } from '../util/utils.js'
-import { Urls, clickSomething, maybeClosePage, selectValue, updateTextFieldIfChanged, waitForElements } from './action-utils.js';
+import { Urls, clickSomething, maybeClosePage, selectValue, updateTextFieldIfChanged, waitForElements, withRetry } from './action-utils.js';
 import { ActionParams } from '../util/action-params.js';
 import { ALL_MARKETPLACES } from '../book/keys.js';
 import { Book } from '../book/book.js';
@@ -22,7 +22,13 @@ export async function updatePricing(book: Book, params: ActionParams): Promise<A
   }
   const page = await params.browser.newPage();
 
-  await page.goto(url, Timeouts.MIN_1);
+  try {
+    await withRetry(async () => await page.goto(url, Timeouts.MIN_1));
+  } catch (e) {
+    debug(book, verbose, 'Failed to load pricing page after retries');
+    await maybeClosePage(params, page);
+    return new ActionResult(false);
+  }
   await page.waitForTimeout(Timeouts.SEC_1);  // Just in case.
 
   let wasUpdated = await updateAllPrices(book, page, verbose);

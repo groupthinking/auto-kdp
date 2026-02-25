@@ -111,7 +111,7 @@ async function updateSeriesTitle(page: PageInterface, book: Book, verbose: boole
             debug(book, verbose, 'Typing search query: ' + searchQuery);
             id = modalName + ' input[type="search"]';
             if (attempt > 1) {
-                await page.clearTextField(id, Timeouts.SEC_10);
+                await page.clearTextField(id, Timeouts.SEC_10, 1);
             }
             await page.focus(id, Timeouts.SEC_5);
             await page.type(id, searchQuery, Timeouts.SEC_5);

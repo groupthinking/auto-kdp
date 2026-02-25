@@ -112,42 +112,42 @@ export class BookFile {
   addBook(book: Book, bookList: BookList) {
     // Check id uniqueness.
     if (book.id != '') {
-      if (book.id in this.ids) {
+      if (this.ids.has(book.id)) {
         throw new Error('Id not unique: ' + book.id);
       }
-      this.ids[book.id] = book;
+      this.ids.set(book.id, book);
     }
 
     // Check titleId uniqueness.
     if (book.titleId != '') {
-      if (book.titleId in this.titleIds) {
+      if (this.titleIds.has(book.titleId)) {
         throw new Error('TitleId not unique: ' + book.titleId);
       }
-      this.titleIds[book.titleId] = book;
+      this.titleIds.set(book.titleId, book);
     }
 
     // Check asin uniqueness.
     if (book.asin != '') {
-      if (book.asin in this.asins) {
+      if (this.asins.has(book.asin)) {
         throw new Error('ASIN not unique: ' + book.asin);
       }
-      this.asins[book.asin] = book;
+      this.asins.set(book.asin, book);
     }
 
     // Check isbn uniqueness.
     if (book.isbn != '') {
-      if (book.isbn in this.isbns) {
+      if (this.isbns.has(book.isbn)) {
         throw new Error('ISBN not unique: ' + book.isbn);
       }
-      this.isbns[book.isbn] = book;
+      this.isbns.set(book.isbn, book);
     }
 
     // Check signature (name, gender, image id) uniqness.
     let sig = book.signature;
-    if (sig in this.signatures) {
+    if (this.signatures.has(sig)) {
       throw new Error('Signature not unique: ' + sig);
     }
-    this.signatures[sig] = book;
+    this.signatures.set(sig, book);
 
     bookList.addBook(book);
   }

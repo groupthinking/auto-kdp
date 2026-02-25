@@ -33,7 +33,7 @@ export async function archive(book: Book, params: ActionParams): Promise<ActionR
     // Type the search query.
     debug(book, verbose, 'Querying for the book');
     let id = '#podbookshelftable-search-input';
-    await page.clearTextField(id, Timeouts.SEC_10);
+    await page.clearTextField(id, Timeouts.SEC_10, 1);
     await page.type(id, book.id, Timeouts.SEC_10);
 
     // Click search button.

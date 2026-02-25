@@ -1,0 +1,49 @@
+{
+  "name": "auto-kdp",
+  "version": "1.0.0",
+  "description": "Automate Amazon KDP publishing for AI-generated kids books and coloring books.",
+  "entrypoint": "build/index.js",
+  "type": "cli",
+  "parameters": {
+    "books": {
+      "type": "string",
+      "description": "Path to the CSV file with book metadata",
+      "required": true,
+      "default": "books.csv"
+    },
+    "config": {
+      "type": "string",
+      "description": "Path to the configuration file",
+      "required": true,
+      "default": "books.conf"
+    },
+    "contentDir": {
+      "type": "string",
+      "description": "Directory containing manuscript PDFs and cover images",
+      "required": true,
+      "default": "."
+    },
+    "userData": {
+      "type": "string",
+      "description": "Directory to store browser profile and cookies",
+      "required": false,
+      "default": "./user_data"
+    },
+    "headless": {
+      "type": "string",
+      "description": "Whether to run browser in headless mode (yes/no)",
+      "required": false,
+      "default": "no"
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Enable verbose logging",
+      "required": false,
+      "default": true
+    }
+  },
+  "capabilities": [
+    "browser_automation",
+    "file_management"
+  ]
+}

@@ -1,8 +1,4 @@
-// Result of a single action, which may or 
-
-import { error } from "console";
-
-// may not be retried.
+// Result of a single action, which may or may not be retried.
 export class ActionResult {
 
     public success: boolean;

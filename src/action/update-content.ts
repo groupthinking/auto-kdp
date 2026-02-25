@@ -1,6 +1,6 @@
 import { ActionResult } from '../util/action-result.js';
 import { debug, error } from '../util/utils.js'
-import { Urls, clickSomething, clickSomething2, fileExists, maybeClosePage } from './action-utils.js';
+import { Urls, clickSomething, fileExists, maybeClosePage } from './action-utils.js';
 import { Book } from '../book/book.js';
 import { ActionParams } from '../util/action-params.js';
 import { Timeouts } from '../util/timeouts.js';
@@ -38,7 +38,6 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
     debug(book, verbose, `isJapanese=${isJapanese}`);
 
     // if no ISBN, get one.
-    // TODO: Support providing your own ISBN.
     if (book.isbn == '') {
         // Click 'Get a free KDP ISBN'
         await page.click('#free-print-isbn-btn-announce', Timeouts.MIN_3);
@@ -51,7 +50,7 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
         debug(book, verbose, 'Getting ISBN/6');
         await page.waitForTimeout(Timeouts.SEC_2);  // Just in case.
         debug(book, verbose, 'Getting ISBN/7');
-        const isbn = await page.evalValue('#free-print-isbn-accordion-row span[data-path="view.free_isbn"]', el => el.innerText, Timeouts.SEC_30);
+        const isbn = await page.evalValue('#free-print-isbn-accordion-row span[data-path="view.free_isbn"]', el => (el as HTMLElement).innerText, Timeouts.SEC_30);
         debug(book, verbose, 'Got ISBN: ' + isbn);
         book.isbn = isbn;
 
@@ -62,7 +61,7 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
 
 
     {
-        // Print option: color print on white paper
+        // Print option: paper color
         debug(book, verbose, 'Selecting paper color: ' + book.paperColor);
         let id = '';
         if (book.paperColor == 'black-and-cream') {
@@ -100,9 +99,9 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
         debug(book, verbose, 'Selecting glossy paper');
         let id = '';
         if (book.paperCoverFinish == 'glossy') {
-            id = 'button[name="GLOSSY"]'; // '#a-autoid-7-announce';
+            id = 'button[name="GLOSSY"]';
         } else if (book.paperCoverFinish == 'matte') {
-            id = 'button[name="MATTE"]'; // '#a-autoid-6-announce';
+            id = 'button[name="MATTE"]';
         } else {
             throw new Error('Unrecognized value for paper finish: ' + book.paperCoverFinish);
         }
@@ -132,20 +131,16 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
         } else {
             throw new Error('Unrecognized value for paper trim: ' + book.paperTrim);
         }
-        // TODO: Support more trim sizes
         await page.focus(id, Timeouts.SEC_5);
         await clickSomething(id, 'trim', page, book, verbose);
         await page.waitForTimeout(Timeouts.SEC_1);  // Just in case.
     }
 
     if (isJapanese) {
-        //
-        // Only for Japanese
-        //
         {
             // Set "page turning direction".
             debug(book, verbose, 'Selecting page turning direction')
-            const id = "button[name='LEFT_TO_RIGHT']"; // "#a-autoid-8-announce"
+            const id = "button[name='LEFT_TO_RIGHT']";
             await clickSomething(id, 'direction', page, book, verbose);
             await page.waitForTimeout(Timeouts.SEC_30);  // Just in case.
         }
@@ -162,18 +157,14 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
         }
 
     } else {
-        //
-        // Only for non-Japanese
-        //
         {
-            //  Select self-uploaded cover as PDF. This option is only available for non-Japanese.
+            // Select self-uploaded cover as PDF.
             debug(book, verbose, 'Selecting PDF cover option');
             let id = '#data-print-book-publisher-cover-choice-accordion [data-a-accordion-row-name=\'UPLOAD\'] a[data-action=\'a-accordion\']';
             await clickSomething(id, "PDF cover option", page, book, verbose);
             await page.waitForTimeout(Timeouts.SEC_2);  // Just in case.
         }
         {
-            // NOTE: We upload cover first becasue the manuscript will take a very long time.
             // Cover
             debug(book, verbose, 'Uploading cover');
             const id = '#data-print-book-publisher-cover-file-upload-browse-button-announce'
@@ -196,37 +187,30 @@ export async function updateContent(book: Book, params: ActionParams): Promise<A
         await page.waitForSelectorVisible('#data-print-book-publisher-interior-file-upload-success', Timeouts.MIN_20);
     }
 
-    // Whether AI-generated. This must be set *before* launch previewer, 
-    // as a lack of answer here, sometimes disables the launch preview.
-    // TODO: For now only support "No", but would be nice to support "Yes".
-    debug(book, verbose, "Clicking whether AI-generated")
-    await page.click('#section-generative-ai div[aria-labelledby="generative-ai-questionnaire-question"] div[data-a-accordion-row-name="no"] a', Timeouts.SEC_10);
+    // Whether AI-generated. CUSTOMIZATION: Default to 'yes' for this pipeline.
+    debug(book, verbose, "Clicking whether AI-generated (setting to YES)")
+    await page.click('#section-generative-ai div[aria-labelledby="generative-ai-questionnaire-question"] div[data-a-accordion-row-name="yes"] a', Timeouts.SEC_10);
+    await page.waitForTimeout(Timeouts.SEC_2);
 
     // Click Launch previewer
     debug(book, verbose, 'Clicking Launch Previewer (typically takes 3.5min)');
     await page.waitForSelector('#print-preview-noconfirm-announce', Timeouts.SEC_30);
-    debug(book, verbose, 'Clicking Launch Previewer/1');
     await page.click('#print-preview-noconfirm-announce', Timeouts.SEC_10);
-    debug(book, verbose, 'Clicking Launch Previewer/2');
     await page.waitForNavigation(Timeouts.MIN_15);
-    debug(book, verbose, 'Clicking Launch Previewer/3');
     await page.waitForTimeout(Timeouts.SEC_2);  // Just in case.
 
     // Click Approve on the preview page.
     debug(book, verbose, 'Clicking Approve');
     await page.waitForSelector('#printpreview_approve_button_enabled a', Timeouts.MIN_3);
-    debug(book, verbose, 'Clicking Approve/1');
     await page.click('#printpreview_approve_button_enabled a', Timeouts.MIN_1);
-    debug(book, verbose, 'Clicking Approve/2');
     await page.waitForSelectorVisible('#save-announce', Timeouts.MIN_3);
-    debug(book, verbose, 'Clicking Approve/3');
     await page.waitForTimeout(Timeouts.SEC_1);  // Just in case.
 
-    debug(book, verbose, "Clicking Confirm that my answers are accurate (this field only shows sometimes)")
+    debug(book, verbose, "Clicking Confirm that my answers are accurate")
     try {
         await page.click('#section-generative-ai .a-checkbox input', Timeouts.SEC_5)
     } catch (e) {
-        console.log("Caught exception", e)
+        console.log("Accurate answers checkbox not found or already checked")
     }
 
     // Save
